@@ -147,6 +147,7 @@ const styles = {
     borderRadius: "4px",
     cursor: "pointer",
     transition: "all 0.3s",
+    margin: "10px",
   },
   contentSection: {
     textAlign: "left" as const,

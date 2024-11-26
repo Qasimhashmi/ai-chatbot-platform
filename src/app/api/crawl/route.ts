@@ -1,38 +1,25 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
+// Correct import for Cheerio
 import * as cheerio from "cheerio";
 
 export async function POST(request: Request) {
   const { url } = await request.json();
 
   try {
-    const { data } = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-    });
-
+    const { data } = await axios.get(url);
     const $ = cheerio.load(data);
+
+    // Extract basic content (e.g., headings and paragraphs)
     const content: string[] = [];
-
-    // Try scraping common text elements
     $("h1, h2, p").each((_, el) => {
-      const text = $(el).text().trim();
-      if (text) content.push(text);
+      content.push($(el).text());
     });
-
-    console.log("Scraped Content:", content); // Debug log
-    if (content.length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: "No meaningful content found on the website.",
-      });
-    }
+    console.log(content);
 
     return NextResponse.json({ success: true, content });
   } catch (error) {
-    console.error("Error during crawling:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to crawl website." },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "Failed to crawl website" }, { status: 500 });
   }
+
 }
