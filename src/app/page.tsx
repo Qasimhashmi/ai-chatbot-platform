@@ -1,101 +1,173 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [url, setUrl] = useState("");
+  const [content, setContent] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const [chatResponse, setChatResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Crawl website
+  const handleCrawl = async () => {
+    setLoading(true);
+    const response = await fetch("/api/crawl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+
+    const data = await response.json();
+    console.log(data); // Add this to debug the response
+    setLoading(false);
+
+    if (data.success) {
+      setContent(data.content); // Ensure this is set
+    } else {
+      alert("Failed to crawl the website.");
+    }
+  };
+
+  // Chatbot query
+  const handleChat = async () => {
+    setLoading(true);
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, content }),
+    });
+
+    const data = await response.json();
+    setChatResponse(data.response);
+    setLoading(false);
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>AI Chatbot Platform</h1>
+        <p style={styles.subtitle}>
+          Seamlessly integrate intelligent chatbots into your website.
+        </p>
+      </div>
+
+      {/* Crawl Website Section */}
+      <div style={styles.section}>
+        <input
+          type="text"
+          placeholder="Enter your website URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          style={styles.input}
+        />
+        <button onClick={handleCrawl} style={styles.button}>
+          {loading ? "Crawling..." : "Crawl Website"}
+        </button>
+      </div>
+
+      {/* Display Crawled Content */}
+      {content.length > 0 && (
+        <div style={styles.contentSection}>
+          <h2>Crawled Data:</h2>
+          <ul style={styles.list}>
+            {content.map((item, index) => (
+              <li key={index} style={styles.listItem}>
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      )}
+
+      {/* Chatbot Section */}
+      {content.length > 0 && (
+        <div style={styles.section}>
+          <input
+            type="text"
+            placeholder="Ask something..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            style={styles.input}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <button onClick={handleChat} style={styles.button}>
+            {loading ? "Processing..." : "Ask"}
+          </button>
+        </div>
+      )}
+
+      {/* Chatbot Response */}
+      {chatResponse && (
+        <div style={styles.card}>
+          <h3>Chatbot Response:</h3>
+          <p>{chatResponse}</p>
+        </div>
+      )}
     </div>
   );
 }
+
+const styles = {
+  container: {
+    fontFamily: "'Roboto', sans-serif",
+    maxWidth: "800px",
+    margin: "0 auto",
+    padding: "20px",
+    textAlign: "center" as const,
+  },
+  header: {
+    marginBottom: "30px",
+  },
+  title: {
+    fontSize: "2.5rem",
+    fontWeight: "bold",
+    color: "#333",
+  },
+  subtitle: {
+    fontSize: "1rem",
+    color: "#666",
+  },
+  section: {
+    margin: "20px 0",
+  },
+  input: {
+    width: "70%",
+    padding: "10px",
+    margin: "10px 0",
+    fontSize: "1rem",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+  },
+  button: {
+    padding: "10px 20px",
+    fontSize: "1rem",
+    color: "#fff",
+    backgroundColor: "#007BFF",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    transition: "all 0.3s",
+  },
+  contentSection: {
+    textAlign: "left" as const,
+    marginTop: "20px",
+  },
+  list: {
+    listStyle: "none",
+    padding: 0,
+  },
+  listItem: {
+    background: "#f9f9f9",
+    padding: "10px",
+    marginBottom: "5px",
+    borderRadius: "4px",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+  },
+  card: {
+    backgroundColor: "#f9f9f9",
+    padding: "20px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    marginTop: "20px",
+  },
+};
